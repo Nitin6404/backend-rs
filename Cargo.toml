@@ -1,5 +1,5 @@
 [package]
-name = "backend-rs"
+name = "drive_clone"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,5 +7,13 @@ edition = "2021"
 axum = "0.7"
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
-serde_json = "1.0"
-
+serde_json = "1"
+sqlx = { version = "0.7", features = ["sqlite", "runtime-tokio-rustls", "macros"] }
+uuid = { version = "1", features = ["v4"] }
+dotenvy = "0.15"
+tower-http = { version = "0.5", features = ["cors", "trace"] }
+jsonwebtoken = "=8.2.0"
+bcrypt = "0.15"
+time = "0.3"
+mime = "0.3"
+base64ct = "=1.7.3"
