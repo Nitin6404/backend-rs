@@ -1,44 +1,31 @@
-use axum::{
-    routing::get,
-    Router,
-    Json,
-    http::StatusCode,
-};
-use serde::Serialize;
+// mod db;
+// mod auth;
+// mod files;
+// mod models;
+// mod utils;
+
+use axum::{Router, routing::get};
+// use dotenvy::dotenv;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
-
-#[derive(Serialize)]
-struct Message {
-    message: String,
-}
-
-async fn hello() -> Json<Message> {
-    let message = "Hello from Rust 🚀".to_string();
-    Json(Message {
-        message,
-    })
-}
-
-async fn not_found() -> (StatusCode, Json<Message>) {
-    let message = "Not Found".to_string();
-    (StatusCode::NOT_FOUND, Json(Message {
-        message,
-    }))
-}
+// use tower_http::cors::{CorsLayer};
 
 #[tokio::main]
 async fn main() {
+    // dotenv().ok();
+    // db::init_db().await.expect("DB init failed");
+
     let app = Router::new()
-        .route("/", get(hello))
-        .route("/not-found", get(not_found))
-        .fallback(not_found);
-    
+        .route("/", get(|| async { "Hello, World!" }));
+        // .merge(auth::routes())
+        // .merge(files::routes())
+        // .layer(CorsLayer::permissive());
+
     let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
     let listener = TcpListener::bind(addr).await.unwrap();
-    println!("Listening on {}", addr);
+    println!("🚀 Listening on http://{}", addr);
 
-    axum::serve(listener, app)
+    axum::serve(listener, app.into_make_service())
         .await
         .unwrap();
 }
