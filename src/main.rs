@@ -48,8 +48,6 @@ pub async fn get_stats(State(state): State<AppState>) -> Json<Vec<ServerCheck>> 
     }
 }
 
-
-
 #[tokio::main]
 async fn main() {
     dotenvy::dotenv().ok();
