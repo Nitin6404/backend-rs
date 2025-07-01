@@ -1,0 +1,23 @@
+# Start from the official Rust image
+FROM rust:1.88-slim
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y pkg-config libssl-dev sqlite3
+
+# Set working directory inside the container
+WORKDIR /app
+
+# Copy project files into the container
+COPY . .
+
+# Build the release binary
+RUN cargo build --release
+
+# Expose port used by Axum
+EXPOSE 3000
+
+# Copy SQLite DB (if it exists)
+COPY database/ ./database/
+
+# Run the release binary
+CMD ["./target/release/drive_clone"]
