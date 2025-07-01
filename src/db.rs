@@ -1,40 +1,41 @@
-use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
-use std::sync::OnceLock;
-use std::env;
+use sqlx::{PgPool, postgres::PgQueryResult};
+use chrono::Utc;
 
-pub static DB: OnceLock<SqlitePool> = OnceLock::new();
-
-pub async fn init_db() -> Result<(), Box<dyn std::error::Error>> {
-    // Get database URL from environment or use default
-    let db_url = env::var("DATABASE_URL")
-        .unwrap_or_else(|_| "sqlite:./data/database.sqlite".to_string());
-    
-    println!("Using database at: {}", db_url);
-    
-    // Ensure the data directory exists
-    if let Some(db_path) = db_url.strip_prefix("sqlite:").and_then(|s| s.split('?').next()) {
-        if let Some(parent) = std::path::Path::new(db_path).parent() {
-            if !parent.exists() {
-                std::fs::create_dir_all(parent)?;
-            }
-        }
-    }
-
-    // Create a new connection pool
-    let pool = SqlitePoolOptions::new()
-        .max_connections(5)
-        .connect(&db_url)
-        .await?;
-    
-    // Run migrations
-    println!("Running database migrations...");
-    sqlx::migrate!("./migrations")
-        .run(&pool)
-        .await?;
-    
-    // Store the connection pool
-    DB.set(pool).expect("Failed to set database pool");
-    
-    println!("✅ Database initialized successfully!");
-    Ok(())
+#[derive(Debug, Clone)]
+pub struct AppState {
+    pub db: PgPool,
 }
+
+#[derive(Debug, serde::Serialize, sqlx::FromRow)]
+pub struct ServerCheck {
+    pub timestamp: String,
+    pub response_time_ms: Option<i64>,    // <-- changed from i32 to i64
+    pub status: Option<String>,
+    pub cpu_usage: Option<f64>,           // <-- changed from f32 to f64
+    pub memory_usage: Option<f64>,        // <-- changed from f32 to f64
+}
+
+
+
+pub async fn insert_server_check(
+    db: &PgPool,
+    response_time_ms: i32,
+    status: &str,
+    cpu_usage: f32,
+    memory_usage: f32,
+) -> Result<PgQueryResult, sqlx::Error> {
+    let timestamp = Utc::now().to_rfc3339();
+
+    sqlx::query(
+        "INSERT INTO server_checks (timestamp, response_time_ms, status, cpu_usage, memory_usage)
+         VALUES ($1, $2, $3, $4, $5)"
+    )
+    .bind(timestamp)
+    .bind(response_time_ms)
+    .bind(status)
+    .bind(cpu_usage)
+    .bind(memory_usage)
+    .execute(db)
+    .await
+}
+

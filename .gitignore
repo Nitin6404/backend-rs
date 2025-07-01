@@ -1,1 +1,7 @@
-/target
+# .gitignore
+target/
+.env
+.sqlx/
+*.db
+Dockerfile~
+docker-volume-data/
